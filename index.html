@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Science Resource Hub</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F3EF;--surface:#FFF;--surface2:#EDECE7;--border:#DDD9CE;--border2:#C4BFAF;
+  --text:#1C1A14;--text2:#6B6556;--text3:#A09A8C;
+  --blue:#1A5FA8;--blue-bg:#E8F1FB;--blue-bd:#B3CEF0;
+  --green:#2A6B2A;--green-bg:#E5F3E5;
+  --amber:#7A4F00;--amber-bg:#FDF3DC;
+  --red:#8B2020;--red-bg:#FDEAEA;
+  --purple:#4A2D8A;--purple-bg:#EEEBFB;
+  --grey:#555;--grey-bg:#F0F0F0;
+  --r:8px;--rl:12px
+}
+body{font-family:Georgia,serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.6}
+
+/* Header */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:.6rem 1.2rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.hdr-title{font-size:1rem;font-weight:bold;flex:1;white-space:nowrap;color:var(--blue)}
+.api-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.api-wrap label{font-size:11px;font-family:monospace;color:var(--text2)}
+.api-inp{font-family:monospace;font-size:12px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);width:220px}
+.api-inp:focus{outline:2px solid var(--blue);outline-offset:1px}
+.api-hint{font-size:11px;color:var(--text3)}
+.api-hint a{color:var(--blue)}
+
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 53px)}
+.sidebar{width:190px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:.75rem 0;overflow-y:auto}
+.main{flex:1;padding:1.25rem;overflow:auto;min-width:0}
+
+/* Sidebar */
+.nav-sec{font-size:10px;font-weight:bold;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;padding:10px 14px 3px;font-family:monospace}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .12s;border-left:3px solid transparent;user-select:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--blue-bg);color:var(--blue);border-left-color:var(--blue);font-weight:bold}
+.nav-icon{font-size:15px;width:18px;text-align:center}
+
+/* Views */
+.view{display:none}.view.active{display:block}
+
+/* Common */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.1rem 1.3rem;margin-bottom:1rem}
+.sec-label{font-size:10px;font-weight:bold;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:7px;font-family:monospace}
+.placeholder{text-align:center;padding:2.5rem 1rem;color:var(--text3);font-size:13px;border:1px dashed var(--border2);border-radius:var(--rl)}
+.btn{padding:7px 16px;border-radius:var(--r);border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:13px;font-family:Georgia,serif;color:var(--text);transition:all .12s}
+.btn:hover{background:var(--surface2)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-bd);font-weight:bold}
+.btn.primary:hover{background:var(--blue-bd)}
+.btn.sm{font-size:11px;padding:3px 10px}
+.btn.danger{background:var(--red-bg);color:var(--red);border-color:#f0b8b8}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:.75rem}
+.badge{font-size:10px;padding:1px 6px;border-radius:3px;font-family:monospace}
+.b-theory{background:var(--blue-bg);color:var(--blue)}
+.b-revision{background:var(--amber-bg);color:var(--amber)}
+.b-prac{background:var(--green-bg);color:var(--green)}
+.b-exam{background:var(--red-bg);color:var(--red)}
+.b-trip{background:var(--purple-bg);color:var(--purple)}
+.b-free{background:var(--grey-bg);color:var(--grey)}
+.status-msg{font-size:12px;font-family:monospace;padding:4px 10px;border-radius:var(--r);display:inline-block;margin-top:7px}
+.s-ok{background:var(--green-bg);color:var(--green)}
+.s-err{background:var(--red-bg);color:var(--red)}
+.s-info{background:var(--amber-bg);color:var(--amber)}
+input,select,textarea{font-family:Georgia,serif;font-size:13px;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--blue);outline-offset:1px}
+textarea{resize:vertical}
+label.lbl{display:block;font-size:11px;color:var(--text2);margin-bottom:3px;font-family:monospace}
+.form-row{margin-bottom:.65rem}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--rl);padding:1.4rem;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:normal;margin-bottom:1rem}
+
+/* ── CALENDAR ── */
+.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.cal-nav h2{font-size:1.1rem;font-weight:normal;flex:1}
+.week-badge{font-size:12px;font-family:monospace;padding:3px 10px;border-radius:20px;font-weight:bold}
+.wk-a{background:var(--blue-bg);color:var(--blue)}
+.wk-b{background:var(--amber-bg);color:var(--amber)}
+.wk-holiday{background:var(--grey-bg);color:var(--grey)}
+.month-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:1.5rem}
+.day-cell{border:1px solid var(--border);border-radius:6px;min-height:90px;padding:5px 6px;background:var(--surface);cursor:pointer;transition:all .12s;display:flex;flex-direction:column;gap:2px;font-size:11px}
+.day-cell:hover{border-color:var(--blue-bd);background:var(--blue-bg)}
+.day-cell.holiday{background:var(--grey-bg);border-color:var(--border);cursor:default;opacity:.6}
+.day-cell.holiday:hover{background:var(--grey-bg);border-color:var(--border)}
+.day-cell.today{border-color:var(--blue);border-width:2px}
+.day-cell.has-lessons{border-color:var(--border2)}
+.day-num{font-size:11px;font-weight:bold;color:var(--text2);font-family:monospace}
+.day-lessons{display:flex;flex-direction:column;gap:1px;flex:1}
+.day-lesson-chip{font-size:10px;padding:1px 4px;border-radius:3px;background:var(--blue-bg);color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:monospace}
+.day-lesson-chip.revision{background:var(--amber-bg);color:var(--amber)}
+.day-lesson-chip.prac{background:var(--green-bg);color:var(--green)}
+.day-lesson-chip.exam{background:var(--red-bg);color:var(--red)}
+.day-lesson-chip.free{background:var(--grey-bg);color:var(--grey)}
+.cal-header-row{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:4px}
+.cal-day-head{font-size:11px;font-weight:bold;color:var(--text2);text-align:center;font-family:monospace;padding:3px}
+.month-title{font-size:13px;font-weight:bold;color:var(--text);margin-bottom:.5rem;font-family:Georgia,serif;display:flex;align-items:center;gap:8px}
+.month-section{margin-bottom:1.5rem}
+
+/* ── LESSON EDITOR ── */
+.period-row{display:grid;grid-template-columns:30px 1fr 1fr 1fr;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.period-row:last-child{border-bottom:none}
+.period-num{font-size:12px;font-weight:bold;color:var(--text3);font-family:monospace;text-align:center}
+
+/* ── RESOURCES ── */
+.res-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1rem 1.3rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap}
+.res-header-main{flex:1}
+.res-header h2{font-size:1.1rem;font-weight:bold}
+.res-header p{font-size:12px;color:var(--text2);margin-top:2px}
+.pills{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.pill{font-size:11px;padding:2px 9px;border-radius:20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);font-family:monospace}
+.pill.ability{background:var(--purple-bg);color:var(--purple);border-color:transparent}
+.rc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:1rem}
+.rc{border:1px solid var(--border);border-radius:var(--r);padding:.8rem;cursor:pointer;transition:all .12s;background:var(--surface2);user-select:none}
+.rc:hover{background:var(--surface);border-color:var(--border2)}
+.rc.selected{border:2px solid var(--blue)!important;background:var(--blue-bg)!important}
+.rc-icon{font-size:16px;margin-bottom:4px}
+.rc-title{font-size:12px;font-weight:bold;margin-bottom:2px}
+.rc-desc{font-size:11px;color:var(--text2);line-height:1.3}
+.output-box{background:var(--surface2);border-radius:var(--r);border:1px solid var(--border);padding:.9rem;min-height:80px;font-size:13px;line-height:1.75;white-space:pre-wrap;color:var(--text2);font-family:Georgia,serif}
+.output-box.filled{color:var(--text)}
+
+/* ── FILES ── */
+.file-drop{border:2px dashed var(--border2);border-radius:var(--rl);padding:1.5rem;text-align:center;cursor:pointer;transition:all .12s;margin-bottom:1rem}
+.file-drop:hover,.file-drop.drag{border-color:var(--blue);background:var(--blue-bg)}
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.file-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.9rem;display:flex;flex-direction:column;gap:5px}
+.file-name{font-size:12px;font-weight:bold;word-break:break-word}
+.file-meta{font-size:11px;color:var(--text3);font-family:monospace}
+
+/* ── LINKS ── */
+.links-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.link-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.9rem;display:flex;align-items:flex-start;gap:8px;text-decoration:none;color:var(--text);transition:all .12s;position:relative}
+.link-card:hover{border-color:var(--blue-bd);background:var(--blue-bg)}
+.link-icon{font-size:20px;flex-shrink:0}
+.link-name{font-size:13px;font-weight:bold;margin-bottom:2px}
+.link-desc{font-size:11px;color:var(--text2)}
+.link-del{position:absolute;top:6px;right:6px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text3);display:none;padding:2px 5px}
+.link-card:hover .link-del{display:block}
+
+/* ── CLASSES ── */
+.class-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);font-size:13px;flex-wrap:wrap}
+.class-code{font-family:monospace;font-weight:bold;color:var(--blue);min-width:75px}
+.class-ability{font-size:11px;color:var(--purple);font-style:italic;flex:1}
+
+/* ── SPACED ── */
+.sr-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.sr-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.9rem}
+.sr-topic{font-size:11px;color:var(--blue);font-weight:bold;margin-bottom:3px;font-family:monospace}
+.sr-q{font-size:13px;margin-bottom:7px;line-height:1.5}
+.sr-reveal{font-size:11px;padding:3px 9px;border:1px solid var(--border2);border-radius:4px;cursor:pointer;background:transparent;color:var(--text2);font-family:Georgia,serif}
+.sr-reveal:hover{background:var(--surface2)}
+.sr-ans{font-size:12px;margin-top:7px;padding:7px 9px;background:var(--green-bg);border-radius:4px;color:var(--green);display:none;line-height:1.5}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-title">🔬 Science Resource Hub</div>
+  <div class="api-wrap">
+    <label>API KEY</label>
+    <input class="api-inp" type="password" id="api-key" placeholder="sk-ant-api03-..." oninput="saveKey()">
+    <span class="api-hint"><a href="https://console.anthropic.com" target="_blank">Get key</a> · <a href="https://console.anthropic.com/settings/billing" target="_blank">Add credits</a></span>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-sec">Planning</div>
+    <div class="nav-item active" data-view="calendar" onclick="showView('calendar')"><span class="nav-icon">📅</span>Calendar</div>
+    <div class="nav-item" data-view="resources" onclick="showView('resources')"><span class="nav-icon">✏️</span>Resources</div>
+    <div class="nav-sec">Tools</div>
+    <div class="nav-item" data-view="spaced" onclick="showView('spaced')"><span class="nav-icon">🔄</span>Spaced Retrieval</div>
+    <div class="nav-item" data-view="simulations" onclick="showView('simulations')"><span class="nav-icon">⚗️</span>Simulations</div>
+    <div class="nav-sec">Library</div>
+    <div class="nav-item" data-view="files" onclick="showView('files')"><span class="nav-icon">📁</span>My Files</div>
+    <div class="nav-item" data-view="links" onclick="showView('links')"><span class="nav-icon">🔗</span>Quick Links</div>
+    <div class="nav-sec">Settings</div>
+    <div class="nav-item" data-view="classes" onclick="showView('classes')"><span class="nav-icon">👥</span>My Classes</div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- CALENDAR -->
+    <div class="view active" id="view-calendar">
+      <div class="cal-nav">
+        <h2 id="cal-title">Academic Calendar 2025–26</h2>
+        <button class="btn sm" onclick="scrollToToday()">Today</button>
+        <button class="btn sm primary" onclick="showView('resources')">Generate resource →</button>
+      </div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">Click any school day to add or edit lessons for that day. Greyed dates are holidays/weekends.</p>
+      <div id="cal-body"></div>
+    </div>
+
+    <!-- RESOURCES -->
+    <div class="view" id="view-resources">
+      <h2 style="font-size:1.2rem;font-weight:normal;margin-bottom:1rem">Resource Generator</h2>
+      <div id="res-placeholder" class="placeholder">
+        <div style="font-size:28px;margin-bottom:.5rem">✏️</div>
+        <p>Select a lesson from the <strong>Calendar</strong> to generate resources.</p>
+        <p style="font-size:12px;margin-top:.4rem;color:var(--text3)">Click any school day → click a period → then come here.</p>
+      </div>
+      <div id="res-panel" style="display:none">
+        <div class="res-header">
+          <div class="res-header-main">
+            <h2 id="rh-cls">—</h2>
+            <p id="rh-topic">—</p>
+            <div class="pills">
+              <span class="pill" id="rh-date"></span>
+              <span class="pill" id="rh-level"></span>
+              <span class="pill" id="rh-subj"></span>
+              <span class="pill ability" id="rh-ability" style="display:none"></span>
+            </div>
+          </div>
+          <button class="btn sm" onclick="showView('calendar')">← Calendar</button>
+        </div>
+
+        <!-- Reference files -->
+        <div class="panel">
+          <div class="sec-label">Reference files (optional)</div>
+          <div id="res-file-list"></div>
+          <div style="margin-top:.6rem">
+            <label class="lbl">Or paste reference text / spec points</label>
+            <textarea id="paste-ctx" rows="3" placeholder="Paste textbook extract, spec points, your notes..."></textarea>
+          </div>
+        </div>
+
+        <!-- Resource type -->
+        <div class="panel">
+          <div class="sec-label">Choose resource type</div>
+          <div class="rc-grid">
+            <div class="rc" onclick="pickType(this,'starter')"><div class="rc-icon">▶</div><div class="rc-title">Lesson starter</div><div class="rc-desc">5-min retrieval + prior topic questions</div></div>
+            <div class="rc" onclick="pickType(this,'worksheet')"><div class="rc-icon">📋</div><div class="rc-title">Worksheet</div><div class="rc-desc">Scaffolded questions, ready to print</div></div>
+            <div class="rc" onclick="pickType(this,'practical')"><div class="rc-icon">🔬</div><div class="rc-title">Practical guide</div><div class="rc-desc">Method, safety, results table, analysis</div></div>
+            <div class="rc" onclick="pickType(this,'exit')"><div class="rc-icon">✓</div><div class="rc-title">Exit ticket</div><div class="rc-desc">3 questions to assess understanding</div></div>
+            <div class="rc" onclick="pickType(this,'ppt')"><div class="rc-icon">📊</div><div class="rc-title">PowerPoint plan</div><div class="rc-desc">Slide-by-slide plan → share back to get .pptx</div></div>
+            <div class="rc" onclick="pickType(this,'spaced_q')"><div class="rc-icon">🔄</div><div class="rc-title">Spaced retrieval</div><div class="rc-desc">Links to prior lessons for this class</div></div>
+            <div class="rc" onclick="pickType(this,'homewk')"><div class="rc-icon">🏠</div><div class="rc-title">Homework task</div><div class="rc-desc">Consolidation or extension homework</div></div>
+            <div class="rc" onclick="pickType(this,'custom')"><div class="rc-icon">✏️</div><div class="rc-title">Custom prompt</div><div class="rc-desc">Write your own instruction</div></div>
+          </div>
+
+          <div id="ppt-box" style="display:none;margin-bottom:.75rem">
+            <label class="lbl">PowerPoint instructions — describe what you want on each slide</label>
+            <textarea id="ppt-prompt" rows="3" placeholder="e.g. Starter retrieval slide, learning objectives, 3 explanation slides with key equations, worked example, exam question, exit ticket slide"></textarea>
+          </div>
+          <div id="custom-box" style="display:none;margin-bottom:.75rem">
+            <label class="lbl">Your instruction</label>
+            <textarea id="custom-prompt" rows="3" placeholder="e.g. Create a card sort matching key terms to definitions..."></textarea>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn primary" id="gen-btn" onclick="generate()">Generate →</button>
+            <button class="btn" onclick="clearOutput()">Clear</button>
+          </div>
+          <div id="gen-status"></div>
+        </div>
+
+        <!-- Output -->
+        <div class="panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+            <div class="sec-label" style="margin:0">Output</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn sm" onclick="copyOutput()" id="copy-btn">Copy</button>
+              <button class="btn sm primary" id="dl-txt-btn" onclick="downloadTxt()" style="display:none">↓ Download (.txt)</button>
+            </div>
+          </div>
+          <div class="output-box" id="output-area">Generated content will appear here...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPACED RETRIEVAL -->
+    <div class="view" id="view-spaced">
+      <h2 style="font-size:1.2rem;font-weight:normal;margin-bottom:1rem">Spaced Retrieval Builder</h2>
+      <div class="panel">
+        <div class="sec-label">Select topics to combine</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:.75rem">Tick lessons from any week. The AI mixes questions across them for a retrieval starter.</p>
+        <div id="sr-topic-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:1rem;max-height:320px;overflow-y:auto"></div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="buildSpaced()">Build retrieval activity →</button>
+          <button class="btn" onclick="clearSpaced()">Clear</button>
+        </div>
+        <div id="sr-status"></div>
+      </div>
+      <div id="sr-output"></div>
+    </div>
+
+    <!-- SIMULATIONS -->
+    <div class="view" id="view-simulations">
+      <h2 style="font-size:1.2rem;font-weight:normal;margin-bottom:1rem">Simulations</h2>
+      <div class="placeholder">
+        <div style="font-size:32px;margin-bottom:.5rem">⚗️</div>
+        <p style="font-size:14px;margin-bottom:.4rem">Simulations are built on request.</p>
+        <p style="font-size:12px;color:var(--text3)">Tell me what simulation you need, the topic and class level, and I'll build it directly into this tab.</p>
+      </div>
+      <div id="sim-list" style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px"></div>
+    </div>
+
+    <!-- FILES -->
+    <div class="view" id="view-files">
+      <h2 style="font-size:1.2rem;font-weight:normal;margin-bottom:1rem">My Files</h2>
+      <div class="panel">
+        <div class="file-drop" id="drop-zone" onclick="document.getElementById('file-inp').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event)">
+          <div style="font-size:28px;margin-bottom:.4rem">📂</div>
+          <p style="font-size:13px;color:var(--text2)">Click to upload or drag files here</p>
+          <p style="font-size:11px;color:var(--text3);margin-top:3px">PDF, Word, PowerPoint, images, text files</p>
+        </div>
+        <input type="file" id="file-inp" style="display:none" multiple accept=".pdf,.docx,.pptx,.txt,.png,.jpg,.jpeg" onchange="handleFiles(this.files)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:.75rem;flex-wrap:wrap">
+          <div class="sec-label" style="margin:0">Uploaded files</div>
+          <select id="file-filter" onchange="renderFiles()" style="width:auto;padding:3px 8px;font-size:12px">
+            <option value="">All</option>
+            <option value="physics">Physics</option>
+            <option value="chemistry">Chemistry</option>
+            <option value="biology">Biology</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+        <div class="file-grid" id="file-grid"><p style="color:var(--text3);font-size:13px">No files yet.</p></div>
+      </div>
+    </div>
+
+    <!-- LINKS -->
+    <div class="view" id="view-links">
+      <h2 style="font-size:1.2rem;font-weight:normal;margin-bottom:1rem">Quick Links</h2>
+      <div class="panel">
+        <div class="sec-label">Add a link</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:7px;margin-bottom:1rem;align-items:end">
+          <div><label class="lbl">NAME</label><input id="ln-name" type="text" placeholder="AQA Past Papers"></div>
+          <div><label class="lbl">URL</label><input id="ln-url" type="url" placeholder="https://..."></div>
+          <button class="btn primary" onclick="addLink()" style="white-space:nowrap;align-self:end">Add</button>
+        </div>
+        <div class="links-grid" id="links-grid"></div>
+      </div>
+    </div>
+
+    <!-- CLASSES -->
+    <div class="view" id="view-classes">
+      <h2 style="font-size:1.2rem;font-weight:normal;margin-bottom:1rem">My Classes</h2>
+      <div class="panel">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:.9rem">Class profiles are used to tailor every resource. Add ability notes to further adjust level and scaffolding.</p>
+        <div id="class-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:.75rem"></div>
+        <div class="btn-row">
+          <button class="btn primary" onclick="openAddClass()">+ Add class</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- LESSON EDIT MODAL -->
+<div class="modal-bg" id="lesson-modal">
+  <div class="modal">
+    <h3 id="lm-title">📅 Edit lessons</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:1rem">Set the class, topic and type for each period. Leave class blank for free periods.</p>
+    <div id="lm-periods"></div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="saveLessons()">Save</button>
+      <button class="btn" onclick="closeModal('lesson-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PERIOD DETAIL MODAL (click chip to go to resources) -->
+<div class="modal-bg" id="period-modal">
+  <div class="modal">
+    <h3 id="pm-title">Period</h3>
+    <div id="pm-body"></div>
+    <div class="btn-row">
+      <button class="btn primary" id="pm-res-btn" onclick="goToResources()">Generate resources →</button>
+      <button class="btn" onclick="closeModal('period-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CLASS MODAL -->
+<div class="modal-bg" id="class-modal">
+  <div class="modal">
+    <h3>👥 Add / Edit class</h3>
+    <div class="form-row"><label class="lbl">CLASS CODE</label><input id="nc-code" type="text" placeholder="e.g. 11K/1A"></div>
+    <div class="form-row"><label class="lbl">YEAR GROUP</label>
+      <select id="nc-year">
+        <option value="7">Year 7</option><option value="8">Year 8</option><option value="9">Year 9</option>
+        <option value="10">Year 10</option><option value="11">Year 11</option>
+        <option value="12">Year 12</option><option value="13">Year 13</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="lbl">LEVEL & SUBJECT</label>
+      <select id="nc-level">
+        <option value="KS3 Science">KS3 — National Curriculum Science</option>
+        <option value="KS3 Biology">KS3 — National Curriculum Biology</option>
+        <option value="GCSE Combined Science AQA">GCSE Combined Science AQA</option>
+        <option value="GCSE Physics AQA">GCSE Physics AQA (Separate)</option>
+        <option value="GCSE Chemistry AQA">GCSE Chemistry AQA (Separate)</option>
+        <option value="GCSE Biology AQA">GCSE Biology AQA (Separate)</option>
+        <option value="A-level Physics AQA">A-level Physics AQA</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="lbl">ABILITY NOTES (optional — e.g. "top set", "mixed ability, scaffold well", "intervention group")</label>
+      <input id="nc-ability" type="text" placeholder="e.g. Top set, push for stretch questions">
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="saveClass()">Save class</button>
+      <button class="btn" onclick="closeModal('class-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════
+
+const DAYS_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const DAYS_SHORT = ['Mon','Tue','Wed','Thu','Fri'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const TYPE_LABELS = {theory:'Theory',revision:'Revision',prac:'Practical',exam:'Exam Qs',trip:'Cover/Trip',free:'Free',other:'Other'};
+const TYPE_BADGE = {theory:'b-theory',revision:'b-revision',prac:'b-prac',exam:'b-exam',trip:'b-trip',free:'b-free',other:'b-free'};
+
+// UK term dates 2025-26 (approximate standard dates)
+// Format: [year, month(0-based), day]
+const HOLIDAYS = buildHolidaySet();
+
+function buildHolidaySet() {
+  const set = new Set();
+  // Summer holiday until 1 Sep 2025
+  addRange(set, new Date(2025,7,1), new Date(2025,7,31));
+  // Autumn half term
+  addRange(set, new Date(2025,9,27), new Date(2025,9,31));
+  // Christmas
+  addRange(set, new Date(2025,11,20), new Date(2026,0,4));
+  // Spring half term
+  addRange(set, new Date(2026,1,16), new Date(2026,1,20));
+  // Easter
+  addRange(set, new Date(2026,3,1), new Date(2026,3,17));
+  // May bank holiday
+  addRange(set, new Date(2026,4,4), new Date(2026,4,4));
+  // Summer half term
+  addRange(set, new Date(2026,4,25), new Date(2026,4,29));
+  // Summer holiday from 17 Jul
+  addRange(set, new Date(2026,6,17), new Date(2026,7,31));
+  return set;
+}
+
+function addRange(set, start, end) {
+  const d = new Date(start);
+  while (d <= end) { set.add(dateKey(d)); d.setDate(d.getDate()+1); }
+}
+
+function dateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+function isHoliday(d) { return HOLIDAYS.has(dateKey(d)); }
+function isWeekend(d) { return d.getDay()===0||d.getDay()===6; }
+function isSchoolDay(d) { return !isWeekend(d) && !isHoliday(d); }
+
+// A/B week rotation: WB 27 Apr 2026 is Week A
+// Week A start reference
+const WEEK_A_REF = new Date(2026,3,27); // 27 Apr 2026
+
+function getWeekAB(date) {
+  // Find the Monday of this date's week
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  const msPerWeek = 7*24*60*60*1000;
+  const weekDiff = Math.round((d - WEEK_A_REF) / msPerWeek);
+  // Even diff = A, odd = B
+  return weekDiff % 2 === 0 ? 'A' : 'B';
+}
+
+// ═══════════════════════════════════════════════
+// DEFAULT DATA
+// ═══════════════════════════════════════════════
+
+const DEFAULT_CLASSES = [
+  {code:'13D',year:13,level:'A-level Physics AQA',subj:'Physics',ability:''},
+  {code:'12A',year:12,level:'A-level Physics AQA',subj:'Physics',ability:''},
+  {code:'11A/2A',year:11,level:'GCSE Physics AQA',subj:'Physics',ability:''},
+  {code:'11K/1A',year:11,level:'GCSE Physics AQA',subj:'Physics',ability:''},
+  {code:'11K/1B',year:11,level:'GCSE Physics AQA',subj:'Physics',ability:''},
+  {code:'11 Sep',year:11,level:'GCSE Physics AQA',subj:'Separate Physics',ability:''},
+  {code:'10A/1A',year:10,level:'GCSE Combined Science AQA',subj:'Combined Science',ability:''},
+  {code:'10K/1A',year:10,level:'GCSE Combined Science AQA',subj:'Combined Science',ability:''},
+  {code:'10 Sep',year:10,level:'GCSE Physics AQA',subj:'Separate Physics',ability:''},
+  {code:'8A/3A',year:8,level:'KS3 Science',subj:'Science',ability:''},
+  {code:'7A/3B',year:7,level:'KS3 Biology',subj:'Biology',ability:''},
+];
+
+const DEFAULT_LINKS = [
+  {name:'AQA Past Papers',url:'https://www.aqa.org.uk/find-past-papers-and-mark-schemes',desc:'Past papers & mark schemes',icon:'📄'},
+  {name:'PhET Simulations',url:'https://phet.colorado.edu',desc:'Free interactive science sims',icon:'⚗️'},
+  {name:'Isaac Physics',url:'https://isaacphysics.org',desc:'Physics problems & resources',icon:'🔭'},
+  {name:'Seneca Learning',url:'https://senecalearning.com',desc:'GCSE & A-level revision',icon:'📚'},
+  {name:'TES Resources',url:'https://www.tes.com/teaching-resources',desc:'Free teacher resources',icon:'🎓'},
+  {name:'BBC Bitesize',url:'https://www.bbc.co.uk/bitesize',desc:'KS3 & GCSE revision',icon:'🖥️'},
+  {name:'CLEAPSS',url:'https://www.cleapss.org.uk',desc:'Practical safety guidance',icon:'⚠️'},
+  {name:'Physics & Maths Tutor',url:'https://www.physicsandmathstutor.com',desc:'Notes, worksheets, past papers',icon:'📐'},
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+
+const S = {
+  lessons: load('srh2_lessons',{}),      // key: dateKey -> {1:{cls,topic,type,notes}, 2:...}
+  classes: load('srh2_classes',DEFAULT_CLASSES),
+  links:   load('srh2_links',DEFAULT_LINKS),
+  files:   load('srh2_files',[]),
+};
+
+function saveS(){
+  save('srh2_lessons',S.lessons);
+  save('srh2_classes',S.classes);
+  save('srh2_links',S.links);
+  save('srh2_files',S.files.map(f=>({...f,content:(f.content||'').substring(0,40000)})));
+}
+
+// ═══════════════════════════════════════════════
+// API KEY
+// ═══════════════════════════════════════════════
+
+function saveKey(){localStorage.setItem('srh2_key',document.getElementById('api-key').value)}
+function getKey(){return document.getElementById('api-key').value||localStorage.getItem('srh2_key')||''}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  const ni=document.querySelector(`[data-view="${id}"]`);
+  if(ni) ni.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════
+
+function buildCalendar(){
+  const body = document.getElementById('cal-body');
+  body.innerHTML='';
+  // Sep 2025 → Jul 2026
+  const months=[
+    [2025,8],[2025,9],[2025,10],[2025,11],
+    [2026,0],[2026,1],[2026,2],[2026,3],[2026,4],[2026,5],[2026,6]
+  ];
+  months.forEach(([yr,mo])=>{
+    const sec=document.createElement('div'); sec.className='month-section';
+    const title=document.createElement('div'); title.className='month-title';
+    title.textContent=`${MONTHS[mo]} ${yr}`;
+    sec.appendChild(title);
+    // Day headers
+    const hdr=document.createElement('div'); hdr.className='cal-header-row';
+    DAYS_SHORT.forEach(d=>{const el=document.createElement('div');el.className='cal-day-head';el.textContent=d;hdr.appendChild(el)});
+    sec.appendChild(hdr);
+    // Grid
+    const grid=document.createElement('div'); grid.className='month-grid';
+    // Find first Monday on or before 1st of month, that is a weekday slot
+    const firstDay=new Date(yr,mo,1);
+    // Get all school week days in this month
+    const allDays=[];
+    const d=new Date(yr,mo,1);
+    while(d.getMonth()===mo){
+      if(!isWeekend(d)) allDays.push(new Date(d));
+      d.setDate(d.getDate()+1);
+    }
+    // Group by week (Mon-Fri)
+    const weeks=[];
+    let week=null; let lastMon=null;
+    allDays.forEach(day=>{
+      const dow=day.getDay(); // 1=Mon
+      if(dow===1||week===null){
+        if(week) weeks.push(week);
+        week={mon:new Date(day),days:[]};
+      }
+      week.days.push(new Date(day));
+    });
+    if(week) weeks.push(week);
+    weeks.forEach(wk=>{
+      // fill Mon-Fri
+      const mon=wk.mon;
+      for(let dow=1;dow<=5;dow++){
+        const dd=new Date(mon); dd.setDate(mon.getDate()+(dow-1));
+        const cell=document.createElement('div');
+        const key=dateKey(dd);
+        const isHol=isHoliday(dd);
+        const isOtherMonth=dd.getMonth()!==mo;
+        const isToday=key===dateKey(new Date());
+        cell.className='day-cell'+(isHol?' holiday':'')+(isToday?' today':'');
+        if(dd.getMonth()!==mo){cell.className='day-cell holiday';cell.innerHTML='';grid.appendChild(cell);return;}
+        const wkab=getWeekAB(dd);
+        const lessons=S.lessons[key]||{};
+        const hasLessons=Object.keys(lessons).length>0;
+        if(hasLessons) cell.classList.add('has-lessons');
+        const numEl=document.createElement('div');
+        numEl.className='day-num';
+        numEl.innerHTML=`${dd.getDate()} ${!isHol?`<span class="week-badge ${isHol?'wk-holiday':'wk-'+wkab.toLowerCase()}">${isHol?'HOL':wkab}</span>`:''}`;
+        cell.appendChild(numEl);
+        if(!isHol){
+          const lessonsDiv=document.createElement('div'); lessonsDiv.className='day-lessons';
+          for(let p=1;p<=5;p++){
+            const l=lessons[p];
+            if(l&&l.cls){
+              const chip=document.createElement('div');
+              chip.className=`day-lesson-chip ${l.type||'theory'}`;
+              chip.textContent=`P${p} ${l.cls}`;
+              lessonsDiv.appendChild(chip);
+            }
+          }
+          cell.appendChild(lessonsDiv);
+          cell.addEventListener('click',()=>openDayEditor(dd));
+        }
+        grid.appendChild(cell);
+      }
+    });
+    sec.appendChild(grid);
+    sec.id='month-'+yr+'-'+mo;
+    body.appendChild(sec);
+  });
+}
+
+function scrollToToday(){
+  const today=new Date();
+  const el=document.getElementById('month-'+today.getFullYear()+'-'+today.getMonth());
+  if(el) el.scrollIntoView({behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════════════
+// DAY EDITOR MODAL
+// ═══════════════════════════════════════════════
+
+let editingDate=null;
+
+function openDayEditor(date){
+  editingDate=date;
+  const key=dateKey(date);
+  const wkab=getWeekAB(date);
+  const lessons=S.lessons[key]||{};
+  document.getElementById('lm-title').textContent=`📅 ${DAYS_FULL[date.getDay()-1]} ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()} — Week ${wkab}`;
+  const perDiv=document.getElementById('lm-periods');
+  perDiv.innerHTML='';
+  // Header
+  const hdr=document.createElement('div');
+  hdr.style='display:grid;grid-template-columns:30px 1fr 1fr 1fr;gap:6px;padding:4px 0;border-bottom:2px solid var(--border);margin-bottom:4px';
+  hdr.innerHTML='<span></span><span style="font-size:10px;font-family:monospace;color:var(--text3)">CLASS</span><span style="font-size:10px;font-family:monospace;color:var(--text3)">TOPIC</span><span style="font-size:10px;font-family:monospace;color:var(--text3)">TYPE</span>';
+  perDiv.appendChild(hdr);
+  for(let p=1;p<=5;p++){
+    const l=lessons[p]||{cls:'',topic:'',type:'theory',notes:''};
+    const row=document.createElement('div'); row.className='period-row';
+    // Class select
+    const clsSel=document.createElement('select');
+    clsSel.id=`lm-cls-${p}`; clsSel.style='font-size:12px;padding:4px 6px';
+    const blankOpt=document.createElement('option'); blankOpt.value=''; blankOpt.textContent='—';
+    clsSel.appendChild(blankOpt);
+    S.classes.forEach(c=>{
+      const opt=document.createElement('option'); opt.value=c.code; opt.textContent=c.code;
+      if(c.code===l.cls) opt.selected=true;
+      clsSel.appendChild(opt);
+    });
+    // Topic
+    const topicInp=document.createElement('input');
+    topicInp.id=`lm-topic-${p}`; topicInp.type='text'; topicInp.value=l.topic||'';
+    topicInp.placeholder='Topic / activity'; topicInp.style='font-size:12px;padding:4px 6px';
+    // Type
+    const typeSel=document.createElement('select');
+    typeSel.id=`lm-type-${p}`; typeSel.style='font-size:12px;padding:4px 6px';
+    Object.entries(TYPE_LABELS).forEach(([v,label])=>{
+      const opt=document.createElement('option'); opt.value=v; opt.textContent=label;
+      if(v===l.type) opt.selected=true;
+      typeSel.appendChild(opt);
+    });
+    // Also a small resource button if has cls+topic
+    const numEl=document.createElement('div'); numEl.className='period-num'; numEl.textContent=p;
+    row.appendChild(numEl); row.appendChild(clsSel); row.appendChild(topicInp); row.appendChild(typeSel);
+    perDiv.appendChild(row);
+  }
+  document.getElementById('lesson-modal').classList.add('open');
+}
+
+function saveLessons(){
+  const key=dateKey(editingDate);
+  const lessons={};
+  for(let p=1;p<=5;p++){
+    const cls=document.getElementById(`lm-cls-${p}`)?.value||'';
+    const topic=document.getElementById(`lm-topic-${p}`)?.value.trim()||'';
+    const type=document.getElementById(`lm-type-${p}`)?.value||'theory';
+    if(cls) lessons[p]={cls,topic,type};
+  }
+  if(Object.keys(lessons).length) S.lessons[key]=lessons;
+  else delete S.lessons[key];
+  saveS();
+  closeModal('lesson-modal');
+  buildCalendar();
+  renderSRTopics();
+}
+
+// ═══════════════════════════════════════════════
+// RESOURCE GENERATOR
+// ═══════════════════════════════════════════════
+
+let selectedLesson=null;
+let selectedType=null;
+let lastOutput='';
+
+function selectForResources(lesson){
+  selectedLesson=lesson;
+  selectedType=null;
+  lastOutput='';
+  document.querySelectorAll('.rc').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('custom-box').style.display='none';
+  document.getElementById('ppt-box').style.display='none';
+  document.getElementById('output-area').textContent='Generated content will appear here...';
+  document.getElementById('output-area').className='output-box';
+  document.getElementById('gen-status').innerHTML='';
+  document.getElementById('dl-txt-btn').style.display='none';
+  const prof=S.classes.find(c=>c.code===lesson.cls)||{level:'Unknown',subj:'Science',ability:''};
+  document.getElementById('rh-cls').textContent=lesson.cls;
+  document.getElementById('rh-topic').textContent=lesson.topic||(lesson.cls+' — no topic set');
+  document.getElementById('rh-date').textContent=lesson.dateLabel||'';
+  document.getElementById('rh-level').textContent=prof.level;
+  document.getElementById('rh-subj').textContent=prof.subj;
+  const abilEl=document.getElementById('rh-ability');
+  if(prof.ability){abilEl.textContent=prof.ability;abilEl.style.display='inline-block'}
+  else abilEl.style.display='none';
+  document.getElementById('res-placeholder').style.display='none';
+  document.getElementById('res-panel').style.display='block';
+  renderResFileList();
+  showView('resources');
+}
+
+function pickType(el,type){
+  document.querySelectorAll('.rc').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedType=type;
+  document.getElementById('custom-box').style.display=type==='custom'?'block':'none';
+  document.getElementById('ppt-box').style.display=type==='ppt'?'block':'none';
+}
+
+function getPriorTopics(lesson){
+  const prior=[];
+  const targetCls=lesson.cls;
+  Object.entries(S.lessons).forEach(([dk,dayLessons])=>{
+    if(dk===lesson.dateKey) return;
+    Object.values(dayLessons).forEach(l=>{
+      if(l.cls===targetCls&&l.topic) prior.push(l.topic);
+    });
+  });
+  return [...new Set(prior)].slice(0,8);
+}
+
+function getFileContext(){
+  let ctx='';
+  document.querySelectorAll('#res-file-list input:checked').forEach(cb=>{
+    const f=S.files.find(f=>f.id===cb.value);
+    if(f?.content) ctx+=`\n\n[File: ${f.name}]\n${f.content.substring(0,8000)}`;
+  });
+  const paste=document.getElementById('paste-ctx').value.trim();
+  if(paste) ctx+=`\n\n[Reference material]\n${paste}`;
+  return ctx;
+}
+
+async function generate(){
+  const key=getKey();
+  if(!key){setStatus('gen-status','err','Add your API key at the top of the page first.');return}
+  if(!selectedLesson){setStatus('gen-status','err','Select a lesson first.');return}
+  if(!selectedType){setStatus('gen-status','err','Select a resource type above.');return}
+  const l=selectedLesson;
+  const prof=S.classes.find(c=>c.code===l.cls)||{level:'Unknown',subj:'Science',ability:''};
+  const priors=getPriorTopics(l);
+  const ctx=getFileContext();
+  const priorStr=priors.length?`This class has previously covered: ${priors.join('; ')}.`:'';
+  const abilityStr=prof.ability?`Ability context: ${prof.ability}.`:'';
+  const levelDesc=prof.level.includes('A-level')?
+    'A-level (16-18), AQA spec — precise scientific language, mathematical rigour, synoptic links':
+    prof.level.includes('GCSE')?
+    `GCSE (14-16), ${prof.level} — clear explanations, AQA command words, accessible but rigorous`:
+    'KS3 (11-14), UK National Curriculum — engaging, clear, relatable examples';
+  const prompts={
+    starter:`Create a 5-minute lesson starter retrieval activity on "${l.topic}" for class ${l.cls} (${levelDesc}). ${abilityStr} Include: 4 numbered recall questions from this topic, then 2 questions revisiting prior topics (${priorStr||'related prior content'}). End with a numbered answer key. Plain text, no markdown symbols.`,
+    worksheet:`Create a classroom worksheet on "${l.topic}" for ${l.cls} (${levelDesc}). ${abilityStr} ${priorStr} Include: LEARNING OBJECTIVE, then 7 questions scaffolded from recall to application to extended analysis. Add a worked example where useful. Number all questions clearly. Plain text only.`,
+    practical:`Write a complete practical guide for "${l.topic}" for ${l.cls} (${levelDesc}). ${abilityStr} Sections: AIM, HYPOTHESIS, EQUIPMENT LIST, METHOD (numbered steps), SAFETY PRECAUTIONS, RESULTS TABLE (use dashes to draw columns), ANALYSIS QUESTIONS (3, with model answers). Plain text only.`,
+    exit:`Write a 3-question exit ticket for "${l.topic}" (${l.cls}, ${levelDesc}). ${abilityStr} Q1: factual recall. Q2: application or calculation. Q3: address a common misconception. Include model answers. Plain text only.`,
+    ppt:`Plan a PowerPoint lesson for "${l.topic}", class ${l.cls} (${levelDesc}). ${abilityStr} ${priorStr} Teacher's slide instructions: ${document.getElementById('ppt-prompt').value||'Standard lesson structure'}. Write a detailed slide-by-slide plan. For each slide: SLIDE N: [TITLE] then bullet points of content, any diagrams to describe, teacher notes. Plain text only.`,
+    spaced_q:`Create 5 spaced retrieval questions for ${l.cls} on topic "${l.topic}" linking to prior topics. ${priorStr} ${abilityStr} After each question note in brackets which prior topic it revisits. Include a concise model answer. Level: ${levelDesc}. Plain text only.`,
+    homewk:`Create a homework task on "${l.topic}" for ${l.cls} (${levelDesc}). ${abilityStr} Include: a clear task brief, 4-6 questions or activities appropriate for independent work, an extension challenge, and an answer guide. Plain text only.`,
+    custom:document.getElementById('custom-prompt').value.trim()||`Create a classroom resource on "${l.topic}" for ${l.cls}.`
+  };
+  const system=`You are an experienced UK secondary science teacher creating ready-to-use classroom resources. Write in clear plain text (no markdown ** or ## symbols). Use CAPITALISED PLAIN TEXT HEADINGS and numbered lists. Be concise and practical.${ctx?`\n\nUse this reference material:\n${ctx}`:''}`;
+  const btn=document.getElementById('gen-btn');
+  btn.disabled=true; btn.textContent='Generating...';
+  setStatus('gen-status','info','Calling Claude...');
+  document.getElementById('output-area').className='output-box';
+  document.getElementById('output-area').textContent='';
+  document.getElementById('dl-txt-btn').style.display='none';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,system,messages:[{role:'user',content:prompts[selectedType]}]})
+    });
+    if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'API error '+resp.status)}
+    const data=await resp.json();
+    lastOutput=(data.content||[]).map(c=>c.text||'').join('');
+    document.getElementById('output-area').textContent=lastOutput;
+    document.getElementById('output-area').className='output-box filled';
+    setStatus('gen-status','ok','Done! Copy the text or download as a file.');
+    document.getElementById('dl-txt-btn').style.display='inline-block';
+  }catch(e){setStatus('gen-status','err','Error: '+e.message)}
+  btn.disabled=false; btn.textContent='Generate →';
+}
+
+function clearOutput(){
+  document.getElementById('output-area').textContent='Generated content will appear here...';
+  document.getElementById('output-area').className='output-box';
+  document.getElementById('gen-status').innerHTML='';
+  document.getElementById('dl-txt-btn').style.display='none';
+  lastOutput='';
+}
+
+function copyOutput(){
+  if(!lastOutput)return;
+  navigator.clipboard.writeText(lastOutput).then(()=>{
+    const b=document.getElementById('copy-btn'); b.textContent='Copied!';
+    setTimeout(()=>b.textContent='Copy',1500);
+  });
+}
+
+function downloadTxt(){
+  if(!lastOutput)return;
+  const cls=selectedLesson?.cls||'Resource';
+  const topic=selectedLesson?.topic||'';
+  const blob=new Blob([lastOutput],{type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`${cls} - ${topic}.txt`.replace(/[\/\\:*?"<>|]/g,'_');
+  a.click();
+}
+
+// ═══════════════════════════════════════════════
+// PERIOD DETAIL → GO TO RESOURCES
+// ═══════════════════════════════════════════════
+
+let pendingLesson=null;
+
+function goToResources(){
+  if(pendingLesson){selectForResources(pendingLesson); closeModal('period-modal');}
+}
+
+// ═══════════════════════════════════════════════
+// SPACED RETRIEVAL
+// ═══════════════════════════════════════════════
+
+function renderSRTopics(){
+  const list=document.getElementById('sr-topic-list');
+  list.innerHTML='';
+  // Group by date, show lessons
+  const entries=Object.entries(S.lessons).sort(([a],[b])=>a.localeCompare(b));
+  entries.forEach(([dk,dayLessons])=>{
+    const d=new Date(dk);
+    const wk=getWeekAB(d);
+    const dateLabel=`${DAYS_FULL[d.getDay()-1]} ${d.getDate()} ${MONTHS[d.getMonth()]} — Wk${wk}`;
+    let added=false;
+    for(let p=1;p<=5;p++){
+      const l=dayLessons[p];
+      if(l?.cls&&l.topic){
+        if(!added){
+          const hdr=document.createElement('div');
+          hdr.style='font-size:10px;font-weight:bold;color:var(--text3);font-family:monospace;padding:4px 0 2px;text-transform:uppercase';
+          hdr.textContent=dateLabel; list.appendChild(hdr); added=true;
+        }
+        const row=document.createElement('div');
+        row.style='display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);font-size:12px;cursor:pointer';
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.style='accent-color:var(--blue);flex-shrink:0';
+        cb.value=JSON.stringify({cls:l.cls,topic:l.topic,dateKey:dk,level:S.classes.find(c=>c.code===l.cls)?.level||''});
+        const lbl=document.createElement('label'); lbl.textContent=`P${p} · ${l.cls} — ${l.topic}`;
+        lbl.style='cursor:pointer'; row.appendChild(cb); row.appendChild(lbl);
+        row.addEventListener('click',e=>{if(e.target!==cb) cb.checked=!cb.checked});
+        list.appendChild(row);
+      }
+    }
+  });
+  if(!list.children.length) list.innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px">Add lessons to the calendar first.</div>';
+}
+
+async function buildSpaced(){
+  const key=getKey();
+  if(!key){setStatus('sr-status','err','Add your API key first.');return}
+  const checks=Array.from(document.querySelectorAll('#sr-topic-list input:checked'));
+  if(!checks.length){setStatus('sr-status','err','Tick at least one topic.');return}
+  const topics=checks.map(c=>JSON.parse(c.value));
+  document.getElementById('sr-output').innerHTML='<div class="placeholder">Generating...</div>';
+  setStatus('sr-status','info','Calling Claude...');
+  const topicList=topics.map(t=>`${t.cls} (${t.level}): ${t.topic}`).join('; ');
+  const prompt=`Create a mixed spaced retrieval activity for these topics: ${topicList}. Generate exactly 6 short questions spread across the topics. For each, provide a concise 1-2 sentence model answer. Respond ONLY with a valid JSON array, no markdown, no preamble: [{"topic":"class and topic","question":"...","answer":"..."}]`;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    if(!resp.ok) throw new Error('API error '+resp.status);
+    const data=await resp.json();
+    const raw=(data.content||[]).map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const qs=JSON.parse(raw);
+    renderSRCards(qs);
+    setStatus('sr-status','ok','Done!');
+  }catch(e){
+    document.getElementById('sr-output').innerHTML='';
+    setStatus('sr-status','err','Error: '+e.message);
+  }
+}
+
+function renderSRCards(qs){
+  const out=document.getElementById('sr-output');
+  out.innerHTML=`<div class="sec-label" style="margin-bottom:8px">${qs.length} retrieval questions</div><div class="sr-cards" id="sr-grid"></div>`;
+  const grid=document.getElementById('sr-grid');
+  qs.forEach((q,i)=>{
+    const card=document.createElement('div'); card.className='sr-card';
+    card.innerHTML=`<div class="sr-topic">${q.topic}</div><div class="sr-q">Q${i+1}. ${q.question}</div><button class="sr-reveal" onclick="revealAns(this)">Reveal answer</button><div class="sr-ans">${q.answer}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+function revealAns(btn){
+  const ans=btn.nextElementSibling;
+  const show=ans.style.display!=='block';
+  ans.style.display=show?'block':'none';
+  btn.textContent=show?'Hide answer':'Reveal answer';
+}
+
+function clearSpaced(){document.getElementById('sr-output').innerHTML='';document.getElementById('sr-status').innerHTML='';}
+
+// ═══════════════════════════════════════════════
+// FILES
+// ═══════════════════════════════════════════════
+
+function dragOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('drag')}
+function dragLeave(e){document.getElementById('drop-zone').classList.remove('drag')}
+function handleDrop(e){e.preventDefault();dragLeave(e);handleFiles(e.dataTransfer.files)}
+
+function handleFiles(fileList){
+  Array.from(fileList).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      S.files.push({id:Date.now()+Math.random()+'',name:file.name,size:file.size,type:file.type,subj:guessSubj(file.name),content:typeof e.target.result==='string'?e.target.result.substring(0,40000):'[binary]',date:new Date().toLocaleDateString('en-GB')});
+      saveS(); renderFiles(); renderResFileList();
+    };
+    if(file.type.startsWith('text')||file.name.endsWith('.txt')) reader.readAsText(file);
+    else reader.readAsDataURL(file);
+  });
+}
+
+function guessSubj(n){n=n.toLowerCase();if(n.includes('chem'))return'chemistry';if(n.includes('bio'))return'biology';if(n.includes('phys'))return'physics';return'general'}
+
+function renderFiles(){
+  const filter=document.getElementById('file-filter').value;
+  const files=filter?S.files.filter(f=>f.subj===filter):S.files;
+  const grid=document.getElementById('file-grid');
+  if(!files.length){grid.innerHTML='<p style="color:var(--text3);font-size:13px">No files yet.</p>';return}
+  grid.innerHTML='';
+  files.forEach(f=>{
+    const card=document.createElement('div'); card.className='file-card';
+    card.innerHTML=`<div class="file-name">${f.name}</div><div class="file-meta">${f.subj} · ${f.date} · ${(f.size/1024).toFixed(1)}KB</div><div style="margin-top:auto"><button class="btn sm danger" onclick="deleteFile('${f.id}')">Remove</button></div>`;
+    grid.appendChild(card);
+  });
+}
+
+function deleteFile(id){S.files=S.files.filter(f=>f.id!==id);saveS();renderFiles();renderResFileList()}
+
+function renderResFileList(){
+  const el=document.getElementById('res-file-list');
+  if(!S.files.length){el.innerHTML='<p style="color:var(--text3);font-size:12px;margin-bottom:.5rem">No files uploaded. Add them in My Files.</p>';return}
+  el.innerHTML='';
+  S.files.forEach((f,i)=>{
+    const row=document.createElement('div');
+    row.style='display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px';
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.id='rfc'+i; cb.value=f.id; cb.style='accent-color:var(--blue)';
+    const lbl=document.createElement('label'); lbl.htmlFor='rfc'+i; lbl.textContent=`${f.name} (${f.subj})`;
+    row.appendChild(cb); row.appendChild(lbl); el.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// LINKS
+// ═══════════════════════════════════════════════
+
+function renderLinks(){
+  const grid=document.getElementById('links-grid'); grid.innerHTML='';
+  S.links.forEach((l,i)=>{
+    const card=document.createElement('a'); card.className='link-card'; card.href=l.url; card.target='_blank'; card.rel='noopener';
+    card.innerHTML=`<span class="link-icon">${l.icon||'🔗'}</span><div><div class="link-name">${l.name}</div><div class="link-desc">${l.desc||l.url}</div></div><button class="link-del" onclick="delLink(event,${i})">✕</button>`;
+    grid.appendChild(card);
+  });
+}
+
+function addLink(){
+  const name=document.getElementById('ln-name').value.trim();
+  const url=document.getElementById('ln-url').value.trim();
+  if(!name||!url)return;
+  S.links.push({name,url,desc:url,icon:'🔗'}); saveS(); renderLinks();
+  document.getElementById('ln-name').value=''; document.getElementById('ln-url').value='';
+}
+
+function delLink(e,i){e.preventDefault();e.stopPropagation();S.links.splice(i,1);saveS();renderLinks()}
+
+// ═══════════════════════════════════════════════
+// CLASSES
+// ═══════════════════════════════════════════════
+
+function renderClasses(){
+  const list=document.getElementById('class-list'); list.innerHTML='';
+  S.classes.forEach((c,i)=>{
+    const row=document.createElement('div'); row.className='class-row';
+    row.innerHTML=`<span class="class-code">${c.code}</span><span style="flex:1;font-size:12px">${c.level}</span><span class="class-ability">${c.ability||'—'}</span><button class="btn sm" onclick="editClass(${i})">Edit</button><button class="btn sm danger" onclick="delClass(${i})">Remove</button>`;
+    list.appendChild(row);
+  });
+}
+
+let editingClassIdx=null;
+
+function openAddClass(){editingClassIdx=null;document.getElementById('nc-code').value='';document.getElementById('nc-year').value='10';document.getElementById('nc-level').value='GCSE Combined Science AQA';document.getElementById('nc-ability').value='';document.getElementById('class-modal').classList.add('open')}
+
+function editClass(i){
+  editingClassIdx=i; const c=S.classes[i];
+  document.getElementById('nc-code').value=c.code;
+  document.getElementById('nc-year').value=c.year;
+  document.getElementById('nc-level').value=c.level;
+  document.getElementById('nc-ability').value=c.ability||'';
+  document.getElementById('class-modal').classList.add('open');
+}
+
+function saveClass(){
+  const code=document.getElementById('nc-code').value.trim();
+  const year=parseInt(document.getElementById('nc-year').value);
+  const level=document.getElementById('nc-level').value;
+  const ability=document.getElementById('nc-ability').value.trim();
+  if(!code)return;
+  const subj=level.includes('Physics')?'Physics':level.includes('Chem')?'Chemistry':level.includes('Bio')?'Biology':'Science';
+  const entry={code,year,level,subj,ability};
+  if(editingClassIdx!==null) S.classes[editingClassIdx]=entry;
+  else S.classes.push(entry);
+  saveS(); renderClasses(); closeModal('class-modal');
+}
+
+function delClass(i){S.classes.splice(i,1);saveS();renderClasses()}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+
+function setStatus(id,type,msg){const el=document.getElementById(id);if(el)el.innerHTML=`<span class="status-msg s-${type}">${msg}</span>`}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+// Close modals on background click
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click',e=>{if(e.target===bg) bg.classList.remove('open')});
+});
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+
+window.addEventListener('load',()=>{
+  const k=localStorage.getItem('srh2_key');
+  if(k) document.getElementById('api-key').value=k;
+  buildCalendar();
+  renderLinks();
+  renderClasses();
+  renderFiles();
+  renderSRTopics();
+  // Scroll to today's month on load
+  setTimeout(scrollToToday, 300);
+});
+</script>
+</body>
+</html>
